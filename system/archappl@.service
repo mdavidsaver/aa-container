@@ -1,0 +1,36 @@
+[Unit]
+PartOf=archappl.service
+Description=Archiver Appliance %I
+After=network-online.target archappl-prep.service
+Requires=archappl-prep.service
+
+[Service]
+Environment="JAVA_HOME=/usr/lib/jvm/default-java"
+Environment="JAVA_OPTS=-Djava.awt.headless=true"
+Environment="CATALINA_HOME=/usr/share/tomcat9"
+Environment="CATALINA_BASE=/var/lib/appl/%i"
+Environment="CATALINA_TMPDIR=/tmp"
+Environment="ARCHAPPL_APPLIANCES=/persist/conf/appliances.xml"
+Environment="ARCHAPPL_POLICIES=/persist/conf/policies.py"
+Environment="ARCHAPPL_PROPERTIES_FILENAME=/persist/conf/archappl.properties"
+Environment="ARCHAPPL_MYIDENTITY=appliance0"
+Environment="ARCHAPPL_SHORT_TERM_FOLDER=/persist/sts/ArchiverStore"
+Environment="ARCHAPPL_MEDIUM_TERM_FOLDER=/persist/mts/ArchiverStore"
+Environment="ARCHAPPL_LONG_TERM_FOLDER=/persist/lts/ArchiverStore"
+Environment="ARCHAPPL_PERSISTENCE_LAYER=org.epics.archiverappliance.config.persistence.SQLitePersistence"
+Environment="ARCHAPPL_PERSISTENCE_LAYER_SQLITEFILENAME=/persist/db/appl.db"
+EnvironmentFile=/persist/conf/environ.conf
+
+Type=simple
+ExecStart=/usr/share/tomcat9/bin/catalina.sh run
+SuccessExitStatus=143
+Restart=on-abort
+
+TimeoutStopSec=600
+Restart=always
+RestartSec=60
+
+SyslogIdentifier=archappl-%i
+
+User=appl
+Group=appl

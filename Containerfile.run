@@ -1,0 +1,17 @@
+# cf. ./build-run.sh
+
+FROM docker.io/library/debian:11
+MAINTAINER mdavidsaver
+
+ARG GIT_COMMIT=unspecified
+LABEL archappl.container.git=$GIT_COMMIT
+
+RUN /build/prepare-in-run.sh
+
+# mgmt
+EXPOSE 17665
+# retrieval
+EXPOSE 17668
+
+STOPSIGNAL SIGRTMIN+3
+CMD [ "/sbin/init" ]
