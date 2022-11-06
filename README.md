@@ -14,8 +14,8 @@ See:
 ## Important Caveats
 
 - Intended for small to medium sized installations.
-  - No support for clusters
-  - Configuration stored in a single SQLite database file instead of mysql/mariadb
+  - No support for clusters.
+  - Configuration stored in a single SQLite database file instead of mysql/mariadb engine.
   - Configuration __must__ not be on network storage!
 - `/persist/conf/appliance.xml` __must__ be manually edited!
 
@@ -31,7 +31,7 @@ See [README-build.md](README-build.md) and/or [container.yml](.github/workflows/
 The following assumes a "simple" layout, where all AA related
 files (`/persist` in the container) will be stored under `/var/lib/appl` on the host filesystem.
 
-See [README.persist](README.persist) for details.
+See [README-persist.md](README-persist.md) for details.
 
 For simplicity, host networking (`--net host`) is used.
 Those familiar with `podman`/`docker` may wish to investigate
@@ -77,7 +77,7 @@ Now shutdown the `appltest` container.
 In another terminal/shell run:
 
 ```sh
-sudo podman stop epicsarchiverap
+sudo podman stop appltest
 ```
 
 `/var/lib/appl` should now be populated with a default configuration.
@@ -98,6 +98,8 @@ eg. if the system hostname is correctly configured.
 ```sh
 sudo sed -ie "s|localhost|$(hostname)|" /var/lib/appl/conf/appliance.xml
 ```
+
+See [README-persist.md](README-persist.md) for details on other files.
 
 ### Create/Start regular container
 
@@ -131,12 +133,39 @@ sudo systemctl enable container-appl.service
 
 ### Test
 
-Visit `http://localhost:17665/mgmt/ui/storage.html`.
+Visit `http://localhost:17665/mgmt/ui/index.html`.
 
 Where `localhost` should be replaced with the hostname
 previously placed in `appliance.xml`.
 
-## docker/podman arguments
+## Customization
+
+Most static configuration is through the directory bound as [`/persist`](README-persist.md).
+This is `/var/lib/appl` in the examples above.
+
+### Separate data storage
+
+eg. To place the Long Term Storage (LTS) data in a different location
+add the following to all `podman run` and `podman create` after
+the bind for `/persist`.
+
+```
+-v /var/lib/lts_data:/persist/lts
+```
+
+### JVM Options
+
+Add `JAVA_OPTS=` in `/persist/conf/environ.conf`.
+
+```
+JAVA_OPTS=-Djava.awt.headless=true -Xmx128m
+```
+
+### EPICS Channel Access Options
+
+See `/persist/conf/environ.conf`.
+
+### docker/podman arguments
 
 `--stop-timeout 600` is essential to allow the
 ETL process sufficient time to copy from the short term (STS)
@@ -149,7 +178,3 @@ See the `Storage` report available through the AA web UI.
 `--net host` is a suggested starting point as it requires no additional network configuration.
 `--net bridge` is another option which provides more isolation while also passing UDP broadcast traffic,
 but requires additional network configuration.
-
-## Customization
-
-For hooks to configure individual containers see [README.persist](README.persist).

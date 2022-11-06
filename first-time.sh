@@ -21,7 +21,7 @@ fi
 
 # copy in default content
 
-[ -e /persist/README ] || install -m444 /usr/share/appl/README.persist /persist/README
+[ -e /persist/README ] || install -m444 /usr/share/appl/README-persist.md /persist/README.md
 
 [ -d /persist/conf ] || install -m644 -Dt /persist/conf/ /usr/share/appl/conf/*
 [ -d /persist/ui ] || install -m644 -Dt /persist/ui/ /usr/share/appl/ui/*

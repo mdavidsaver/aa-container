@@ -15,7 +15,7 @@ apt-get -y --no-install-recommends install \
 install -d /usr/share/appl/db
 
 rsync -av \
- wait-ready.sh first-time.sh README.persist \
+ wait-ready.sh first-time.sh README-persist.md \
  conf ui \
  /usr/share/appl/
 
