@@ -15,7 +15,10 @@ echo "Create $TAG from '$PWD' and '$WARDIR'"
 [ -r "prepare-in-run.sh" ] || exit 2
 
 [ -r ".git" ] \
- && HASHARG="--build-arg GIT_COMMIT=$(git describe --always --abbrev=1000)"
+ && SCRIPT_VER="--build-arg SCRIPT_VER=$(git describe --always --abbrev=1000)"
+
+[ -r "epicsarchiverap/.git" ] \
+ && APPL_VER="--build-arg APPL_VER=$(git --git-dir epicsarchiverap/.git describe --always --abbrev=1000)"
 
 podman build \
  --tag $TAG \
@@ -23,5 +26,5 @@ podman build \
  --squash \
  --volume "$PWD":/build:ro \
  --volume "$WARDIR":/wars:ro \
- $HASHARG \
+ $SCRIPT_VER $APPL_VER \
  .
