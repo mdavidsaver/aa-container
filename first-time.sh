@@ -10,11 +10,14 @@ die() {
 
 [ -d /persist ] || die "Missing /persist eg. podman w/ '-v /var/lib/appl:/persist'"
 
-# service account
-[ "${ARCHAPPL_UID}" ] || ARCHAPPL_UID=500
-[ "${ARCHAPPL_GID}" ] || ARCHAPPL_GID=500
-groupadd --system -g $ARCHAPPL_GID appl
-useradd --system -u $ARCHAPPL_UID -g appl appl
+if ! id appl
+then
+    # service account
+    [ "${ARCHAPPL_UID}" ] || ARCHAPPL_UID=500
+    [ "${ARCHAPPL_GID}" ] || ARCHAPPL_GID=500
+    groupadd --system -g $ARCHAPPL_GID appl
+    useradd --system -u $ARCHAPPL_UID -g appl appl
+fi
 
 # copy in default content
 
