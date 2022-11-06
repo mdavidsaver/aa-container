@@ -1,4 +1,4 @@
-If not present, the contents of this
+If not present, the contents of the /persist
 directory will be created with defaults.
 
 - conf/appliances.xml

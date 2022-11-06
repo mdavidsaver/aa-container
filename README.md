@@ -1,31 +1,57 @@
 # Archiver Appliance Demo Container
 
-Scripts to build an OCI container image with a
-standalone EPICS Archiver Applance.
+Scripts to build an OCI container image with a standalone EPICS Archiver Appliance (aka. "AA").
 
-## Build AA into WAR files
+The images produced are intended those new to AA and/or to Linux containers.
+Some assumptions specific to small to medium sized installations are made.
+(eg. no support for multi-host clusters)
 
-```sh
-podman run --rm \
- -v $PWD:/build \
- docker.io/library/debian:11 \
- /build/build-wars.sh
-```
+See:
 
-## Build image
+- https://github.com/slacmshankar/epicsarchiverap
+- https://slacmshankar.github.io/epicsarchiver_docs/
 
-Build container from .war files.
+## Important Caveats
 
-```sh
-sudo ./build-run.sh $PWD/wars
-```
+- Intended for small to medium sized installations.
+  - No support for clusters
+  - Configuration stored in a single SQLite database file instead of mysql/mariadb
+  - Configuration __must__ not be on network storage!
+- `/persist/conf/appliance.xml` __must__ be manually edited!
 
-## Run image
+## Current Status
 
-Test run container.
+Pre-built images are not currently published.
+Each site/user must be built manually an `epicsarchiverap` image.
+
+See [README-build.md](README-build.md) and/or [container.yml](.github/workflows/container.yml).
+
+## Getting Started
+
+The following assumes a "simple" layout, where all AA related
+files (`/persist` in the container) will be stored under `/var/lib/appl` on the host filesystem.
+
+See [README.persist](README.persist) for details.
+
+For simplicity, host networking (`--net host`) is used.
+Those familiar with `podman`/`docker` may wish to investigate
+alternative like `bridge` which provide more isolation, but
+which also require additional site specific configuration.
+
+### Host filesystem layout
+
+Create an empty directory.
 
 ```sh
 sudo install -d /var/lib/appl
+```
+
+### First run
+
+If empty, the `/var/lib/appl` will be populated with defaults
+the first time the image runs.
+
+```sh
 sudo podman run --rm -ti \
  -v /var/lib/appl:/persist \
  --net host \
@@ -35,19 +61,80 @@ sudo podman run --rm -ti \
  epicsarchiverap
 ```
 
-The directory `/var/lib/appl` should initially be empty.
-On first start, it will be populated with default configuration.
+Wait until the following is seen:
 
-Then visit `http://localhost:17665/mgmt/ui/storage.html`.
-
-Trigger a clean shutdown with:
-
-```sh
-sudo podman stop appltest
+```
+[  OK  ] Finished EPICS Archiver Appliance.
 ```
 
-The host directory `/var/lib/appl` will be populated
-initially with default configuration.
+As a test, in another terminal/shell run:
+
+```sh
+curl http://localhost:17665/mgmt/ui/storage.html
+```
+
+Now shutdown the `appltest` container.
+In another terminal/shell run:
+
+```sh
+sudo podman stop epicsarchiverap
+```
+
+`/var/lib/appl` should now be populated with a default configuration.
+
+```
+$ ls /var/lib/appl/
+conf  db  logs  lts  mts  README  sts  ui
+```
+
+### Required configuration
+
+At minimum, `/var/lib/appl/conf/appliance.xml` __must__ be edited
+to replace `localhost` with the actual hostname or IP address
+through which the AA daemon will be reached.
+
+eg. if the system hostname is correctly configured.
+
+```sh
+sudo sed -ie "s|localhost|$(hostname)|" /var/lib/appl/conf/appliance.xml
+```
+
+### Create/Start regular container
+
+For simplicity, create a persistent container.
+
+```sh
+sudo podman create \
+ -v /var/lib/appl:/persist \
+ --net host \
+ --stop-timeout 600 \
+ --shm-size 128m \
+ --name appl \
+ epicsarchiverap
+```
+
+Which can be started manually with:
+
+```sh
+sudo podman start appl
+```
+
+or via systemd.
+
+```sh
+sudo podman generate systemd -n -f appl
+sudo cp container-appl.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl start container-appl.service
+sudo systemctl enable container-appl.service
+```
+
+### Test
+
+Visit `http://localhost:17665/mgmt/ui/storage.html`.
+
+Where `localhost` should be replaced with the hostname
+previously placed in `appliance.xml`.
 
 ## docker/podman arguments
 
@@ -66,24 +153,3 @@ but requires additional network configuration.
 ## Customization
 
 For hooks to configure individual containers see [README.persist](README.persist).
-
-
-## Speeding up image build
-
-Of Debian based images on a Debian host.
-Run a http proxy to cache .deb packages.
-
-```sh
-# runs specially configured squid
-sudo apt-get install squid-deb-proxy
-# stop regular (unused) squid
-sudo systemctl stop squid
-sudo systemctl disable squid
-sudo systemctl mask squid
-```
-
-```sh
-export http_proxy=http://172.16.16.1:8000/
-```
-
-`podman` by default passes `$http_proxy` through.
