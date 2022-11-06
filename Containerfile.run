@@ -3,8 +3,11 @@
 FROM docker.io/library/debian:11
 MAINTAINER mdavidsaver
 
-ARG GIT_COMMIT=unspecified
-LABEL archappl.container.git=$GIT_COMMIT
+ARG SCRIPT_VER=unspecified
+LABEL aa-container.git=$SCRIPT_VER
+
+ARG APPL_VER=unspecified
+LABEL epicsarchiverap.git=$APPL_VER
 
 RUN /build/prepare-in-run.sh
 

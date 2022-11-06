@@ -8,7 +8,7 @@ apt-get -y --no-install-recommends install \
  git ant wget default-jdk-headless tomcat9-user
 
 [ -d epicsarchiverap ] \
-|| git clone --recursive --branch sqlite https://github.com/mdavidsaver/epicsarchiverap.git
+|| git clone --recursive https://github.com/slacmshankar/epicsarchiverap.git
 
 ls epicsarchiverap/lib/sqlite-jdbc-*.jar \
 || (cd epicsarchiverap/lib && wget https://github.com/xerial/sqlite-jdbc/releases/download/3.39.2.0/sqlite-jdbc-3.39.2.0.jar)

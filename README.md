@@ -32,7 +32,7 @@ sudo podman run --rm -ti \
  --stop-timeout 600 \
  --shm-size 128m \
  --name appltest \
- appl
+ epicsarchiverap
 ```
 
 The directory `/var/lib/appl` should initially be empty.
