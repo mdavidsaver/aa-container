@@ -17,7 +17,7 @@ podman run --rm \
 Build container from .war files.
 
 ```sh
-sudo ./build-run.sh $PWD/epicsarchiverap/out
+sudo ./build-run.sh $PWD/wars
 ```
 
 ## Run image

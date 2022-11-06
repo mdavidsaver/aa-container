@@ -1,0 +1,44 @@
+name: "AA"
+
+on: [push, pull_request]
+
+jobs:
+  podman:
+    runs-on: "ubuntu-latest"
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+
+    - name: OS Deps
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y podman
+
+    - name: Build AA
+      run: >
+        podman run --rm
+        -v $PWD:/build
+        docker.io/library/debian:11
+        /build/build-wars.sh
+
+    - name: List WARS
+      run: ls -l wars
+
+    - name: Build Image
+      run: ./build-run.sh $PWD/wars
+
+    - name: Image Info
+      run: |
+        podman image tree appl:latest
+        podman image history appl:latest
+        podman image inspect appl:latest
+
+    - name: Save Image
+      run: podman save -o appl.tar appl:latest
+
+    - name: List Image file
+      run: |
+        ls -l appl.tar
+        tar -tf appl.tar
+
