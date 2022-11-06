@@ -2,6 +2,10 @@ name: "AA"
 
 on: [push, pull_request]
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   podman:
     runs-on: "ubuntu-latest"
@@ -25,20 +29,36 @@ jobs:
     - name: List WARS
       run: ls -l wars
 
-    - name: Build Image
+    - name: Build image
       run: ./build-run.sh $PWD/wars
 
-    - name: Image Info
+    - name: Add release tag
+      if: startsWith(github.ref, 'refs/tags/')
       run: |
-        podman image tree appl:latest
-        podman image history appl:latest
-        podman image inspect appl:latest
+        TAG=${{ github.ref }}
+        podman image tag epicsarchiverap:latest epicsarchiverap:${TAG#refs/tags/}
 
-    - name: Save Image
-      run: podman save -o appl.tar appl:latest
-
-    - name: List Image file
+    - name: Image info
       run: |
-        ls -l appl.tar
-        tar -tf appl.tar
+        podman image tree epicsarchiverap:latest
+        podman image history epicsarchiverap:latest
+        podman image inspect epicsarchiverap:latest
 
+    - name: Save image
+      run: |
+        podman save -o epicsarchiverap.tar epicsarchiverap:latest
+        xz -9e epicsarchiverap.tar
+
+    - name: List image file
+      run: |
+        set -x
+        ls -l epicsarchiverap.tar*
+        xz -l *.xz
+        tar -taf epicsarchiverap.tar*
+
+    - name: Upload for testing
+      uses: actions/upload-artifact@v2
+      with:
+        name: epicsarchiverap
+        path: epicsarchiverap.tar*
+        retention-days: 1
