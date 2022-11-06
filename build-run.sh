@@ -6,7 +6,7 @@ cd "$(dirname "$(readlink -f "$0")")"
 WARDIR="$1"
 TAG="$2"
 
-[ "$TAG" ] || TAG="appl:latest"
+[ "$TAG" ] || TAG="epicsarchiverap:latest"
 
 echo "Create $TAG from '$PWD' and '$WARDIR'"
 [ "$http_proxy" ] && echo "http_proxy=$http_proxy"

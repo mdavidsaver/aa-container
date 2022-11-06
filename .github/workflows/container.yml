@@ -30,15 +30,25 @@ jobs:
 
     - name: Image Info
       run: |
-        podman image tree appl:latest
-        podman image history appl:latest
-        podman image inspect appl:latest
+        podman image tree epicsarchiverap:latest
+        podman image history epicsarchiverap:latest
+        podman image inspect epicsarchiverap:latest
 
     - name: Save Image
-      run: podman save -o appl.tar appl:latest
+      run: |
+        podman save -o epicsarchiverap.tar epicsarchiverap:latest
+        xz -9e epicsarchiverap.tar
 
     - name: List Image file
       run: |
-        ls -l appl.tar
-        tar -tf appl.tar
+        set -x
+        ls -l epicsarchiverap.tar*
+        xz -l *.xz
+        tar -taf epicsarchiverap.tar*
 
+    - name: Upload for testing
+      uses: actions/upload-artifact@v2
+      with:
+        name: epicsarchiverap
+        path: epicsarchiverap.tar*
+        retention-days: 1
