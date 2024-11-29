@@ -1,17 +1,35 @@
+# Example of a --user service
+
 [Unit]
 Description=EPICS Archiver Appliance
 Requires=network.target
-After=network.target archappl-prep.service archappl@mgmt.service archappl@engine.service archappl@etl.service archappl@retrieval.service
-Requires=archappl-prep.service archappl@mgmt.service archappl@engine.service archappl@etl.service
-Wants=archappl@retrieval.service
+After=network.target
 
 [Service]
-Type=oneshot
-ExecStart=/usr/share/appl/wait-ready.sh
-RemainAfterExit=yes
+Environment=PODMAN_SYSTEMD_UNIT=%n
+
+Type=notify
+
+ExecStartPre=/bin/rm -f %t/%n.ctr-id
+
+ExecStart=/usr/bin/podman run \
+ --rm --name archappl \
+ --cidfile=%t/%n.ctr-id \
+ --cgroups=no-conmon \
+ --sdnotify=conmon \
+ --detach \
+ --stop-timeout=60 \
+ -v %h/archappl-data:/persist \
+ --net host \
+ --hostname %l \
+ epicsarchiverap run
+
+ExecStop=/usr/bin/podman stop --name archappl
+
+SuccessExitStatus=143
 StandardOutput=journal+console
 
 TimeoutStartSec=120
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
