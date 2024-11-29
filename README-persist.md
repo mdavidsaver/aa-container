@@ -3,51 +3,23 @@
 If not present, the contents of the /persist
 directory will be created with defaults.
 
-- conf/appliances.xml
+Must be writable by the daemon user
 
-The default contains "localhost" which should
-be replaced with the externally visible host name or IP address.
+- appliances.xml
 
-- conf/environ.conf
+Created with container `$HOSTNAME`.
 
-A systemd EnvironmentFile used to set additional
-environment variables to the AA processes.
-eg. EPICS_CA_* settings.
-
-- conf/log4j.properties
-
-Daemon logging settings.
-
-- conf/context.xml
-
-Contains config database settings.
-
-- conf/policies.py
+- policies.py
 
 Logging policies hook script.
 
-- logs/*
+- archappl.properties
 
-Log files for the four AA daemon processes.
+Archiver specific configuration.
 
-Must be writable by the daemon user
-
-- db/
+- appl.db
 
 Configuration database.
-
-Must be writable by the daemon user
-
-- sts/
-
-Short term storage.
-
-By default, a symlink to /dev/shm **in the container**.
-
-It is highly recommended that STS be a RAM disk or
-similarly low latency storage.
-
-Must be writable by the daemon user
 
 - mts/
 - lts/
@@ -55,3 +27,7 @@ Must be writable by the daemon user
 Long and Medium term storage.
 
 Must be writable by the daemon user
+
+- README-persist.md
+
+This file.  Will be overwritten with original if modified.

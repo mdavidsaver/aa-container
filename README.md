@@ -1,6 +1,6 @@
 # Archiver Appliance Demo Container
 
-Scripts to build an OCI container image with a standalone EPICS Archiver Appliance (aka. "AA").
+Source for an OCI container image with a standalone EPICS Archiver Appliance (aka. "AA").
 
 The images produced are intended those new to AA and/or to Linux containers.
 Some assumptions specific to small to medium sized installations are made.
@@ -8,8 +8,8 @@ Some assumptions specific to small to medium sized installations are made.
 
 See:
 
-- https://github.com/slacmshankar/epicsarchiverap
-- https://slacmshankar.github.io/epicsarchiver_docs/
+- https://github.com/archiver-appliance/epicsarchiverap
+- https://epicsarchiver.readthedocs.io/en/latest/index.html
 
 ## Important Caveats
 
@@ -29,114 +29,97 @@ See [README-build.md](README-build.md) and/or [container.yml](.github/workflows/
 ## Getting Started
 
 The following assumes a "simple" layout, where all AA related
-files (`/persist` in the container) will be stored under `/var/lib/appl` on the host filesystem.
-
-See [README-persist.md](README-persist.md) for details.
+files are stored under `/persist` in the container.
 
 For simplicity, host networking (`--net host`) is used.
 Those familiar with `podman`/`docker` may wish to investigate
 alternative like `bridge` which provide more isolation, but
 which also require additional site specific configuration.
 
-### Host filesystem layout
+### Example Host filesystem layout
 
-Create an empty directory.
+Create an empty directory writable by UID 1000 in the container.
 
 ```sh
-sudo install -d /var/lib/appl
+podman unshare install -d -o 1000 -g 1000 persist
 ```
+
+## Host Preparation
+
+Install `podman`
+
+```sh
+apt-get install podman
+```
+
+or
+
+```sh
+dnf install podman
+```
+
+## Build image
+
+```sh
+git clone https://github.com/mdavidsaver/aa-container
+cd aa-container
+podman build -t epicsarchiverap .
+```
+
+On success, the `epicsarchiverap:latest` tag will appear in: `podman image list`.
 
 ### First run
 
-If empty, the `/var/lib/appl` will be populated with defaults
-the first time the image runs.
+Prepare a host directory to mount as `/persist` within the container.
 
 ```sh
-sudo podman run --rm -ti \
- -v /var/lib/appl:/persist \
+podman unshare install -d -o 1000 -g 1000 persist
+```
+
+Note: For later cleanup, this directory can be removed with `podman unshare rm -rf persist`.
+
+```sh
+podman run --rm \
+ -v "$PWD"/persist:/persist \
  --net host \
- --stop-timeout 600 \
- --shm-size 128m \
- --name appltest \
- epicsarchiverap
+ --hostname $HOSTNAME \
+ --env APP_PORT=17665 \
+ --env ARCHAPPL_MYIDENTITY=archappl0 \
+ epicsarchiverap init
 ```
 
-Wait until the following is seen:
+On start, `"$PWD"/persist` will be populated with with any missing configuration.
+`init` will then exit without running the archiver.
 
-```
-[  OK  ] Finished EPICS Archiver Appliance.
-```
+Note: `--env APP_PORT=17665` or `--env ARCHAPPL_MYIDENTITY=archappl0` are defaults, and may be omitted.
 
-As a test, in another terminal/shell run:
+Note: The AA service requires that the hostname must match the hostname
+      which appears in the `appliances.xml` file.
+      Thus `--net host` is followed by `--hostname $HOSTNAME`.
+
+Note: when running with `--net host` the container hostname must match the host.
+      Thus `--hostname $HOSTNAME`
+
+## Running
 
 ```sh
-curl http://localhost:17665/mgmt/ui/storage.html
-```
-
-Now shutdown the `appltest` container.
-In another terminal/shell run:
-
-```sh
-sudo podman stop appltest
-```
-
-`/var/lib/appl` should now be populated with a default configuration.
-
-```
-$ ls /var/lib/appl/
-conf  db  logs  lts  mts  README  sts  ui
-```
-
-### Required configuration
-
-At minimum, `/var/lib/appl/conf/appliance.xml` __must__ be edited
-to replace `localhost` with the actual hostname or IP address
-through which the AA daemon will be reached.
-
-eg. if the system hostname is correctly configured.
-
-```sh
-sudo sed -ie "s|localhost|$(hostname)|" /var/lib/appl/conf/appliance.xml
-```
-
-See [README-persist.md](README-persist.md) for details on other files.
-
-### Create/Start regular container
-
-For simplicity, create a persistent container.
-
-```sh
-sudo podman create \
- -v /var/lib/appl:/persist \
+podman run --rm \
+ --name archappl \
+ -v "$PWD"/persist:/persist \
+ --stop-timeout=60 \
  --net host \
- --stop-timeout 600 \
- --shm-size 128m \
- --name appl \
- epicsarchiverap
+ --hostname $HOSTNAME \
+ epicsarchiverap run
 ```
 
-Which can be started manually with:
-
-```sh
-sudo podman start appl
-```
-
-or via systemd.
-
-```sh
-sudo podman generate systemd -n -f appl
-sudo cp container-appl.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl start container-appl.service
-sudo systemctl enable container-appl.service
-```
+This will run until interrupted with `SIGINT` or `SIGTERM`,
+or alternativly by running: `podman stop --name archappl --stop-timeout=60`.
 
 ### Test
 
 Visit `http://localhost:17665/mgmt/ui/index.html`.
 
-Where `localhost` should be replaced with the hostname
-previously placed in `appliance.xml`.
+Where `localhost` should be substitued with the hostname.
 
 ## Customization
 
@@ -155,15 +138,15 @@ the bind for `/persist`.
 
 ### JVM Options
 
-Add `JAVA_OPTS=` in `/persist/conf/environ.conf`.
+Add `-e CATALINA_OPTS=...` when running.
 
 ```
-JAVA_OPTS=-Djava.awt.headless=true -Xmx128m
+CATALINA_OPTS=-Djava.awt.headless=true -Xmx128m
 ```
 
 ### EPICS Channel Access Options
 
-See `/persist/conf/environ.conf`.
+Add eg. `-e EPICS_CA_ADDR_LIST=...` when running.
 
 ### docker/podman arguments
 

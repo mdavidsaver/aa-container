@@ -10,7 +10,7 @@ jobs:
   podman:
     runs-on: "ubuntu-latest"
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -20,17 +20,17 @@ jobs:
         sudo apt-get install -y podman
 
     - name: Build AA
-      run: >
-        podman run --rm
-        -v $PWD:/build
-        docker.io/library/debian:11
-        /build/build-wars.sh
+      run: podman build --squash -t epicsarchiverap:latest .
 
-    - name: List WARS
-      run: ls -l wars
-
-    - name: Build image
-      run: ./build-run.sh $PWD/wars
+    - name: Test init
+      run: |
+        podman unshare install -d -o 1000 -g 1000 persist
+        podman unshare cp template_changes.html persist/
+        podman run --rm \
+         -v ./persist:/persist \
+         --hostname ${HOSTNAME} \
+         epicsarchiverap:latest init
+        find persist -not -type d
 
     - name: Add release tag
       if: startsWith(github.ref, 'refs/tags/')
@@ -57,7 +57,7 @@ jobs:
         tar -taf epicsarchiverap.tar*
 
     - name: Upload for testing
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: epicsarchiverap
         path: epicsarchiverap.tar*

@@ -1,8 +1,0 @@
-[Unit]
-Description=EPICS Archiver Appliance startup prep
-
-[Service]
-Type=oneshot
-ExecStart=/usr/share/appl/first-time.sh
-RemainAfterExit=yes
-StandardOutput=journal+console

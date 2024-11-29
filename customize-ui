@@ -1,0 +1,26 @@
+#!/bin/sh
+set -e -x
+
+die() {
+    cat <<EOF
+Usage: $0 <template_changes.html> [ui_data/]
+EOF
+    echo "$1"
+    exit 1
+}
+
+TEMPL="$1"
+UIDAT="$2"
+
+[ -f "$TEMPL" ] || die "Missing template.html"
+[ "$UIDAT" -a ! -d "$UIDAT" ] || die "Must be a directory: $UIDAT"
+
+java -cp /usr/local/tomcat/webapps/mgmt/WEB-INF/classes \
+    org.epics.archiverappliance.mgmt.bpl.SyncStaticContentHeadersFooters \
+    /persist/template_changes.html \
+    /usr/local/tomcat/webapps/mgmt/ui
+
+if [ "$UIDAT" ]
+then
+    (cd "$UIDAT" && tar -c * ) | tar -C /usr/local/tomcat/webapps/mgmt/ui -xv
+fi
