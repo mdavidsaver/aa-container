@@ -1,3 +1,5 @@
+# Example of a --user service
+
 [Unit]
 Description=EPICS Archiver Appliance
 Requires=network.target
@@ -17,7 +19,7 @@ ExecStart=/usr/bin/podman run \
  --sdnotify=conmon \
  --detach \
  --stop-timeout=60 \
- -v %h/archappl:/persist \
+ -v %h/archappl-data:/persist \
  --net host \
  --hostname %l \
  epicsarchiverap run

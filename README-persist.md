@@ -7,7 +7,8 @@ Must be writable by the daemon user
 
 - appliances.xml
 
-Created with container `$HOSTNAME`.
+Created with `localhost`.
+Most user will edit to replace with actual effective hostname.
 
 - policies.py
 

@@ -26,7 +26,8 @@ RUN for name in mgmt engine etl retrieval ; do \
 
 FROM docker.io/library/tomcat:9-jdk17
 LABEL org.opencontainers.image.authors="mdavidsaver@gmail.com" \
-      org.opencontainers.image.source="https://github.com/mdavidsaver/aa-container"
+      org.opencontainers.image.source="https://github.com/mdavidsaver/aa-container" \
+      org.opencontainers.image.url="https://github.com/mdavidsaver/aa-container"
 
 COPY --from=wars \
  /usr/local/tomcat/webapps \
