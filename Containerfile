@@ -1,12 +1,12 @@
-FROM docker.io/library/gradle:8-jdk17-jammy AS wars
+FROM docker.io/library/gradle:8-jdk21-jammy AS wars
 
 RUN apt-get update \
  && apt-get -y install wget git sqlite3 rdfind python-is-python3 python3-venv python3-pip \
  && rm -rf /var/lib/apt/lists /var/cache/apt
 
-RUN wget -nv https://github.com/xerial/sqlite-jdbc/releases/download/3.47.1.0/sqlite-jdbc-3.47.1.0.jar
+RUN wget -nv https://github.com/xerial/sqlite-jdbc/releases/download/3.50.3.0/sqlite-jdbc-3.50.3.0.jar
 
-RUN git clone --depth 1 --branch 2.0.5 https://github.com/archiver-appliance/epicsarchiverap
+RUN git clone --depth 1 --branch 2.0.10 https://github.com/archiver-appliance/epicsarchiverap
 
 # generateReleaseNotes incompatible with shallow clone
 RUN cd epicsarchiverap \
@@ -21,10 +21,11 @@ RUN for name in mgmt engine etl retrieval ; do \
       && cp /home/gradle/sqlite-jdbc-*.jar /usr/local/tomcat/webapps/$name/WEB-INF/lib/ \
       || exit 1 ; \
     done \
-    && rdfind -makehardlinks true /usr/local/tomcat/webapps/* \
-    && sqlite3 -init epicsarchiverap/src/main/org/epics/archiverappliance/config/persistence/archappl_sqlite.sql empty.db
+    && rdfind -makehardlinks true /usr/local/tomcat/webapps/*
 
-FROM docker.io/library/tomcat:9-jdk17
+RUN sqlite3 -init epicsarchiverap/src/main/org/epics/archiverappliance/config/persistence/archappl_sqlite.sql empty.db
+
+FROM docker.io/library/tomcat:9-jdk21
 LABEL org.opencontainers.image.authors="mdavidsaver@gmail.com" \
       org.opencontainers.image.source="https://github.com/mdavidsaver/aa-container" \
       org.opencontainers.image.url="https://github.com/mdavidsaver/aa-container"
