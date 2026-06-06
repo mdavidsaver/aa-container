@@ -1,7 +1,7 @@
 FROM docker.io/library/gradle:9-jdk21-resolute AS wars
 
 RUN apt-get update \
- && apt-get -y install wget git sqlite3 rdfind python-is-python3 python3-venv python3-pip \
+ && apt-get -y install nano less wget git sqlite3 rdfind python-is-python3 python3-venv python3-pip \
  && rm -rf /var/lib/apt/lists /var/cache/apt
 
 RUN wget -nv https://github.com/xerial/sqlite-jdbc/releases/download/3.53.2.0/sqlite-jdbc-3.53.2.0.jar
