@@ -92,7 +92,7 @@ export ARCHAPPL_PROPERTIES_FILENAME=/persist/archappl.properties
 export ARCHAPPL_MYIDENTITY
 export CATALINA_OUT=/dev/stdout
 
-CMD="$1"
+CMD="${1:=run}"
 shift
 case "$CMD" in
 run) true ;;
