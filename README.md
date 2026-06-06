@@ -161,17 +161,28 @@ but requires additional network configuration.
 
 ### systemd configuration
 
-An example configuration of a `systemd` user unit
-([`system/archappl.service`](system/archappl.service))
-is provided.
+An example podman quadlet configuration of a `systemd` user unit.
+
 
 ```sh
 podman unshare install -d -o 1000 -g 1000 ~/archappl-data
-systemctl --user edit --full --force archappl.service
-# paste in contents of system/archappl.service
-systemctl --user start archappl.service
-# test... then enable automatic start on boot
-systemctl --user enable archappl.service
+
+install -d ~/.config/containers/systemd/
+
+cat << EOF > ~/.config/containers/systemd/aa.container
+[Container]
+Image=localhost/epicsarchiverap:2.3.1
+Exec=run
+Environment=ARCHAPPL_MYIDENTITY=appliance0
+Volume=%h/archappl-data:/persist
+Network=host
+
+[Install]
+WantedBy=default.target
+EOF
+
+systemctl --user daemon-reload
+systemctl --user start aa.service
 ```
 
 Notes:
